@@ -17,11 +17,13 @@ places =[
     {'username': 'shivam','placeName': 'mandaula', 'addedOn': time.strftime("%d/%m/%Y"), 'details': 'this is awesome place for everyone', 'likes': 200, 'id': 1},
     {'username': 'jaan','placeName': 'saket', 'addedOn': time.strftime("%d/%m/%Y"), 'details': 'this is awesome place for every couple', 'likes': 2300, 'id': 2},
     {'username': 'shivam','placeName': 'lal kila', 'addedOn': time.strftime("%d/%m/%Y"), 'details': 'this is place for incient kings', 'likes': 210, 'id': 3},
+    {'username': 'jaan','placeName': 'five sence', 'addedOn': time.strftime("%d/%m/%Y"), 'details': 'this is awesome place for every couple', 'likes': 2300, 'id': 2}
 ]
 
 comments =[
     {'username': 'jaan','id': 2, 'text': "i love this place and i am owner of the place", 'addedOn': time.strftime("%d/%m/%Y")},
-    {'username': 'shivam','id': 3, 'text': "this is famous place since 1990", 'addedOn': time.strftime("%d/%m/%Y")}
+    {'username': 'shivam','id': 3, 'text': "this is famous place since 1990", 'addedOn': time.strftime("%d/%m/%Y")},
+    {'username': 'shivam','id': 2, 'text': "kdsjfjkljsklfjsdklfj", 'addedOn': time.strftime("%d/%m/%Y")}
 ]
 
 @auth.get_password
@@ -38,8 +40,14 @@ def unauthorzed():
 @app.route('/get/user/current_user_place', methods=['GET'])
 @auth.login_required
 def get_current_user_place():
-    place =[place for place in places if auth.username() == place['username']]
-    return jsonify({'user_place': place}), 201
+    search = request.args.get('search')
+    new_list = []
+    for place in places:
+        if search in place['placeName']:
+            new_list.append(place)
+    if len(new_list) == 0:
+        new_list.append({'typeerror':'sorry, your search word does not exist in our server'})
+    return jsonify({'user_place': new_list}), 201
 
 @app.route('/get/user/current_user_one_place/<int:place_id>', methods=['GET'])
 @auth.login_required
@@ -110,6 +118,22 @@ def new_place():
     }
     places.append(place)
     return jsonify({'places': places}), 201
+
+@app.route('/post/user/add_comment/<int:comment_id>', methods=['POST'])
+@auth.login_required
+def add_comment(comment_id):
+    if not request.json and not 'text' in request.json:
+        abort(400)
+    comment =[comment for comment in comments if comment_id ==comment['id']]
+    particular_user_comment =[particular_user_comment for particular_user_comment in comment if auth.username() ==particular_user_comment['username']]
+    particular_user_comment ={
+        'text': request.json['text'],
+        'username': auth.username(),
+        'id': comment['id'],
+        'addedOn': time.strftime("%d/%m/%Y")
+    }
+    comments.append(particular_user_comment)
+    return jsonify({'comment': particular_user_comment})
 
 
 if __name__ =="__main__":
